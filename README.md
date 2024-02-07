@@ -9,10 +9,14 @@ I can think of a few easy solutions for this:
 
  1) Assign letters to the number of a 'modified_character,' but not the other way around. Maintaining integrity of the numbers is obviously important. 
 
- 2) If a number collapses into a high letter, replace the letter with the number. This maintains the numbers positions in the document. 
-
- 3) Alternatively, we may be able to use a prime number expression to store value of the numbers in order.
-
+ 2) If a number collapses into a high letter, replace the letter with the number. This maintains the numbers positions in the document.
+ 
+ 3) Numbers have to take precedence to other data types, until a specific API has been trained. And under no circumstances should you pair a number with      another number. Unless:
+    
+ 5) We can create a space efficient number key which uses categorization clues to help the AI. For example: The order the numbers appear in is a prime        number beginning in an odd number, or with an odd number in the middle, or combination of even and odd, etc.
+    Is the least common multiple of x and y but not z and y.
+    Is concatenation of the operands that result in a certain super-prime number, etc. Ai can make very efficient use of general clues, which you'll see      if you test the pre-codec out. 
+ `  
 
 
 # Ambiguous-AI-Assisted-Text-Codec
