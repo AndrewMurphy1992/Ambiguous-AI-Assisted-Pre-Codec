@@ -1,3 +1,20 @@
+WARNING: I AM NOT RESPONSIBLE FOR YOUR LOST DATA. KEEP BACKUPS OF ANY FILES YOU USE THIS '3/4-MIRROR-CIPHER' ON. THIS IS A PRE-BETA PROGRAM AND ANY DATA YOU CODE THIS WAY IS VERY LIKELY TO BE CORRUPTED AND LOST FOREVER, OPTIMIZATIONS HAVE NOT BEEN MADE, AND IT IS NOT YET A DEPENDABLE PRODUCT. YOU HAVE BEEN WARNED.
+
+
+#Update: You will need to tinker with the 'Encoder4.py' file to get a print() of the '3/4-mirror-cipher' text document. This is the (Data) before the "#Modify the Data" comment in the code. Replace 'AskPython2.py' with your test document, making sure it's in the same directory asy 'Encoder4.py.' Once you get the altered file, you should see a mish-mash that is more or less readable. You will find that when you compress this document, it is quite a bit smaller than a compressed version of the unaltered document. The native compression of the program still isn't working correctly so you will have to just save both files to txt and then compress them with the format of your choice. This will be more similar to the final implementation anyway, as the concept should be applicable to literally any type of data with the right optimizations. 
+
+To get your data back, well we're in the dark ages of that I'm afraid. Extract your document, which remember you ran it through my cipher program so it's going to come out looking like it had a bad day at work. Now paste the Key of Original Characters, which should print when you run the program normally, along with the Header of Huffman Codes {} in your favorite AI. Copy and paste the ciphered text as well. You're going to have to figure out how to get to that, for now. It will probably make a kawai comment and then it will very accurately fix the scrambled text. Well, with one hickup. In my experience, AI has a problem with numbers. So you will probably get readable text back along with scrambled numbers. See WARNING at the top of the README.
+
+I can think of a few easy solutions for this:
+
+ 1) Assign letters to the number of a 'modified_character,' but not the other way around. Maintaining integrity of the numbers is obviously important. 
+
+ 2) If a number collapses into a high letter, replace the letter with the number. This maintains the numbers positions in the document. 
+
+ 3) Alternatively, we may be able to use a prime number expression to store value of the numbers in order.
+
+
+
 # Ambiguous-AI-Assisted-Text-Codec
 Ambiguous Artificial Intelligence Assisted File (De)Compression Technique
 
