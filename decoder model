@@ -1,0 +1,191 @@
+import tkinter as tk
+from tkinter import filedialog
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
+import random
+import matplotlib.pyplot as plt
+
+# Define the function to load data from file
+def load_data_from_file():
+    root = tk.Tk()
+    root.withdraw()  # Hide the main window
+    file_path = filedialog.askopenfilename()  # Open file dialog
+    if file_path:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            text = file.read()
+        return text
+    else:
+        print("No file selected.")
+        return None
+
+# Load piglatin text
+print("Select the file containing piglatin text:")
+piglatin_text = load_data_from_file()
+
+# Load original English text
+print("Select the file containing original English text:")
+english_text = load_data_from_file()
+
+# Define the piglatin to English translation function
+def piglatin_to_english(piglatin_text):
+    # Implement your translation logic here
+    # For now, let's just return the original text
+    return piglatin_text
+
+# Generate data pairs
+data_pairs = []
+for piglatin_sentence, english_sentence in zip(piglatin_text.split('.'), english_text.split('.')):
+    english_text_translation = piglatin_to_english(piglatin_sentence.strip())
+    data_pairs.append((piglatin_sentence.strip(), english_text_translation.strip()))
+
+# Shuffle the data pairs
+random.shuffle(data_pairs)
+
+# Split the data into train and test sets (80-20 split)
+train_size = int(0.8 * len(data_pairs))
+train_data = data_pairs[:train_size]
+test_data = data_pairs[train_size:]
+
+print("Number of training examples:", len(train_data))
+print("Number of testing examples:", len(test_data))
+
+# Define the vocabulary
+all_characters = set(''.join(piglatin_text.split()))
+n_characters = len(all_characters)
+print("Vocabulary size:", n_characters)
+
+# Define the dataset class
+class PigLatinDataset(Dataset):
+    def __init__(self, data):
+        self.data = data
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx]
+
+# Function to convert characters to indexes
+def char_to_index(char):
+    return all_characters.index(char)
+
+# Function to convert indexes to characters
+def index_to_char(index):
+    return list(all_characters)[index]
+
+# Function to prepare sequence tensor from string
+def prepare_sequence(seq):
+    return torch.tensor([char_to_index(char) for char in seq])
+
+# Function to train the model
+def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, max_length=100):
+    encoder_hidden = torch.zeros(1, 1, encoder.hidden_size)
+    encoder_optimizer.zero_grad()
+    decoder_optimizer.zero_grad()
+
+    input_length = input_tensor.size(0)
+    target_length = target_tensor.size(0)
+
+    loss = 0
+
+    for ei in range(input_length):
+        _, encoder_hidden = encoder(input_tensor[ei])
+
+    decoder_input = torch.tensor([[char_to_index('SOS')]])
+
+    decoder_hidden = encoder_hidden
+
+    for di in range(target_length):
+        decoder_output, decoder_hidden = decoder(decoder_input, decoder_hidden)
+        topv, topi = decoder_output.topk(1)
+        decoder_input = topi.squeeze().detach()
+
+        loss += criterion(decoder_output, target_tensor[di])
+        if decoder_input.item() == char_to_index('EOS'):
+            break
+
+    loss.backward()
+
+    encoder_optimizer.step()
+    decoder_optimizer.step()
+
+    return loss.item() / target_length
+
+# Function to train the model for multiple epochs
+def train_epochs(encoder, decoder, n_epochs=10, print_every=1000, plot_every=100, learning_rate=0.01):
+    optimizer = optim.SGD(encoder.parameters(), lr=learning_rate)
+    criterion = nn.NLLLoss()
+    
+    train_losses = []
+    val_losses = []
+
+    for epoch in range(1, n_epochs + 1):
+        total_loss = 0
+        for pair in train_data:
+            input_tensor = prepare_sequence(pair[0])
+            target_tensor = prepare_sequence(pair[1])
+
+            loss = train(input_tensor, target_tensor, encoder, decoder, optimizer, optimizer, criterion)
+            total_loss += loss
+        
+        # Print loss
+        if epoch % print_every == 0:
+            print(f"Epoch {epoch}, Loss: {total_loss / len(train_data)}")
+        
+        # Save loss values for plotting
+        train_losses.append(total_loss / len(train_data))
+        # Dummy validation loss
+        val_losses.append(total_loss / len(train_data))
+
+    # Plot the training and validation loss
+    plt.plot(range(1, len(train_losses) + 1), train_losses, label='Training Loss')
+    plt.plot(range(1, len(val_losses) + 1), val_losses, label='Validation Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Loss Over Epochs')
+    plt.legend()
+    plt.show()
+
+# Define the encoder and decoder models
+class Encoder(nn.Module):
+    def __init__(self, input_size, hidden_size):
+        super(Encoder, self).__init__()
+        self.hidden_size = hidden_size
+        self.embedding = nn.Embedding(input_size, hidden_size)
+        self.gru = nn.GRU(hidden_size, hidden_size)
+
+    def forward(self, input):
+        embedded = self.embedding(input).view(1, 1, -1)
+        output, hidden = self.gru(embedded)
+        return output, hidden
+
+class Decoder(nn.Module):
+    def __init__(self, hidden_size, output_size):
+        super(Decoder, self).__init__()
+        self.hidden_size = hidden_size
+        self.embedding = nn.Embedding(output_size, hidden_size)
+        self.gru = nn.GRU(hidden_size, hidden_size)
+        self.out = nn.Linear(hidden_size, output_size)
+        self.softmax = nn.LogSoftmax(dim=1)
+
+    def forward(self, input, hidden):
+        output = self.embedding(input).view(1, 1, -1)
+        output = nn.functional.relu(output)
+        output, hidden = self.gru(output, hidden)
+        output = self.softmax(self.out(output[0]))
+        return output, hidden
+
+# Initialize the encoder and decoder models
+hidden_size = 128
+encoder = Encoder(n_characters, hidden_size)
+decoder = Decoder(hidden_size, n_characters)
+
+# Load the pre-trained model weights
+model_weights_filepath = "/home/virtual/Desktop/encoderw.pth"
+encoder.load_state_dict(torch.load(model_weights_filepath))
+
+# Train the model and plot the loss curve
+train_epochs(encoder, decoder)
+
