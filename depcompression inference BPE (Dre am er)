@@ -1,0 +1,63 @@
+import tkinter as tk
+from tkinter import filedialog
+from collections import Counter
+
+def count_characters(text):
+    # Count characters in the text
+    char_count = Counter(text)
+    # Sort characters by count in descending order
+    sorted_chars = sorted(char_count.items(), key=lambda x: x[1], reverse=True)
+    return sorted_chars
+
+def find_words_with_chars(text, char1, char2):
+    # Split text into words
+    words = text.split()
+    # Check if any word contains both char1 and char2
+    matching_words = [word for word in words if char1 in word and char2 in word]
+    return matching_words
+
+def count_words(text):
+    words = text.split()
+    return len(words)
+
+def process_file():
+    file_path = filedialog.askopenfilename()
+    if file_path:
+        total_matching_words = 0
+        with open(file_path, 'r') as file:
+            document_text = file.read()
+            characters = count_characters(document_text)
+            
+            while len(characters) > 1:
+                # Pop the top and bottom characters
+                top_char, top_count = characters.pop(0)
+                bottom_char, bottom_count = characters.pop()
+
+                print(f"Top Character: {top_char}, Bottom Character: {bottom_char}")
+
+                matching_words = find_words_with_chars(document_text, top_char, bottom_char)
+                total_matching_words += len(matching_words)
+                if matching_words:
+                    print(f"Words containing both '{top_char}' and '{bottom_char}': {matching_words}")
+                else:
+                    print("No words containing both characters found.")
+
+            if characters:
+                remaining_char, remaining_count = characters.pop()
+                print(f"One character remaining: {remaining_char}")
+            else:
+                print("No characters remaining.")
+        print(f"Total number of matching words: {total_matching_words}")
+        num_words = count_words(document_text)
+        print(f"Number of words in the document: {num_words}")
+
+# Create the main window
+root = tk.Tk()
+root.title("File Character Count and Processing")
+
+# Create a button to select a file for processing
+button = tk.Button(root, text="Select File", command=process_file)
+button.pack(pady=10)
+
+root.mainloop()
+
